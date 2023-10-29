@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Chat cùng Hiếu</title>
+        <style>
+            .up {
+                color: green;
+            }
+
+            .down {
+                color: red;
+            }
+
+            .no-change {
+                color: orange;
+            }
+        </style>
+    </head>
+    <body>
+        <h1>App chat siêu nhanh</h1>
+        <ul id="messages"></ul>
+        <form id="chatForm">
+            <input id="chatMsg" />
+            <button id="sendChat">Gửi</button>
+        </form>
+        <span id="bitcoinPrice"></span>
+    </body>
+    <!-- chưa rõ tại sao nhúng như thế này -->
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io();
+        const chatForm = document.querySelector('#chatForm');
+        const chatMsg = document.querySelector('#chatMsg');
+        const name = prompt();
+
+        // send message
+        chatForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const message = chatMsg.value;
+            socket.emit('on-chat', {
+                name,
+                message,
+            });
+            chatMsg.value = '';
+        });
+
+        // display message
+        const messages = document.querySelector('#messages');
+        socket.on('user-chat', (data) => {
+            const itemChat = document.createElement('li');
+            itemChat.textContent = `${data.name}: ${data.message}`;
+            messages.appendChild(itemChat);
+        });
+
+        // display bitcoin price
+        const priceContainer = document.querySelector('#bitcoinPrice');
+        let prevPrice = 0;
+        socket.on('bitcoin-price', (data) => {
+            const { price } = data;
+            if (price > prevPrice) {
+                priceContainer.className = 'up';
+            } else if (price < prevPrice) {
+                priceContainer.className = 'down';
+            } else {
+                priceContainer.className = 'no-change';
+            }
+            prevPrice = price;
+            priceContainer.textContent = price + ' USD';
+        });
+    </script>
+</html>
